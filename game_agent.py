@@ -5,6 +5,9 @@ and include the results in your report.
 import random
 
 
+infinity = float('inf')
+
+
 class SearchTimeout(Exception):
     """Subclass base exception for code clarity. """
     pass
@@ -35,7 +38,10 @@ def custom_score(game, player):
         The heuristic value of the current game state to the specified player.
     """
     # TODO: finish this function!
-    raise NotImplementedError
+
+
+    # For now use #legalmoves for current player.
+    return len(game.get_legal_moves(player))
 
 
 def custom_score_2(game, player):
@@ -170,6 +176,38 @@ class MinimaxPlayer(IsolationPlayer):
         # Return the best move from the last completed search iteration
         return best_move
 
+    def minval(self, game, depth):
+        """ Returns the value of minimal utility of possible moves """
+        if self.time_left() < self.TIMER_THRESHOLD:
+            raise SearchTimeout()
+
+        if depth == 0:  # terminal node
+            return self.score(game, self)
+
+        legal_moves = game.get_legal_moves()
+        if not legal_moves:  # opposing player can't move
+            return infinity
+
+        return min([self.maxval(game.forecast_move(move), depth - 1)
+                    for move in legal_moves])
+
+    def maxval(self, game, depth):
+        """ Returns the value of the maximal utility of possible moves """
+        if self.time_left() < self.TIMER_THRESHOLD:
+            raise SearchTimeout()
+
+        if depth == 0:
+            return self.score(game, self)
+
+        legal_moves = game.get_legal_moves()
+        if not legal_moves:  # player can't move
+            return -infinity
+
+        return max([self.minval(game.forecast_move(move), depth - 1)
+                    for move in legal_moves]
+                  )
+
+
     def minimax(self, game, depth):
         """Implement depth-limited minimax search algorithm as described in
         the lectures.
@@ -209,11 +247,26 @@ class MinimaxPlayer(IsolationPlayer):
                 each helper function or else your agent will timeout during
                 testing.
         """
+
         if self.time_left() < self.TIMER_THRESHOLD:
             raise SearchTimeout()
 
-        # TODO: finish this function!
-        raise NotImplementedError
+        if depth < 1:
+            raise ValueError("Depth must be at least 1")
+
+        legal_moves = game.get_legal_moves()
+
+        if not legal_moves:
+            return (-1, -1)
+
+        vals = []
+
+        for move in legal_moves:
+            vals.append(self.minval(game.forecast_move(move), depth-1))
+
+        #print(vals)
+        print(legal_moves[vals.index(max(vals))])
+        return legal_moves[vals.index(max(vals))]
 
 
 class AlphaBetaPlayer(IsolationPlayer):
