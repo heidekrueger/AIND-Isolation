@@ -207,7 +207,6 @@ class MinimaxPlayer(IsolationPlayer):
                     for move in legal_moves]
                   )
 
-
     def minimax(self, game, depth):
         """Implement depth-limited minimax search algorithm as described in
         the lectures.
@@ -265,7 +264,7 @@ class MinimaxPlayer(IsolationPlayer):
             vals.append(self.minval(game.forecast_move(move), depth-1))
 
         #print(vals)
-        print(legal_moves[vals.index(max(vals))])
+        #print(legal_moves[vals.index(max(vals))])
         return legal_moves[vals.index(max(vals))]
 
 
@@ -309,6 +308,114 @@ class AlphaBetaPlayer(IsolationPlayer):
 
         # TODO: finish this function!
         raise NotImplementedError
+
+    def maxval(self, game, depth, alpha, beta):
+        """ Returns the value of the maximal utility of possible moves or
+            a lower bound on it if it can be inferred that this value will
+            be higher than the limit
+
+        Parameters
+        ----------
+        game : isolation.Board
+            An instance of the Isolation game `Board` class representing the
+            current game state
+
+        depth : int
+            Depth is an integer representing the maximum number of plies to
+            search in the game tree before aborting
+
+        alpha : float
+            Alpha limits the lower bound of search on minimizing layers
+
+        beta : float # TODO: remove later?
+            Beta limits the upper bound of search on maximizing layers
+
+        """
+        if self.time_left() < self.TIMER_THRESHOLD:
+            raise SearchTimeout()
+
+        if depth == 0:
+            return self.score(game, self)
+
+        legal_moves = game.get_legal_moves()
+        if not legal_moves:  # player can't move
+            return -infinity
+
+        current_max = float("-inf")
+
+        for move in legal_moves:
+            # get val of current move and update current_max
+            current_max = max(
+                current_max,
+                self.minval(
+                    game.forecast_move(move),
+                    depth - 1,
+                    alpha=alpha,
+                    beta=beta
+                )
+            )
+
+            if current_max >= beta:
+                # prune remaining moves: this branch will be eliminated anyway
+                return current_max
+
+            alpha = min(alpha, current_max)
+
+        return current_max
+
+    def minval(self, game, depth, alpha, beta):
+        """ Returns the value of the maximal utility of possible moves or
+            a lower bound on it if it can be inferred that this value will
+            be higher than the limit
+
+        Parameters
+        ----------
+        game : isolation.Board
+            An instance of the Isolation game `Board` class representing the
+            current game state
+
+        depth : int
+            Depth is an integer representing the maximum number of plies to
+            search in the game tree before aborting
+
+        alpha : float
+            Alpha limits the lower bound of search on minimizing layers
+
+        beta : float # TODO: remove later?
+            Beta limits the upper bound of search on maximizing layers
+
+        """
+        if self.time_left() < self.TIMER_THRESHOLD:
+            raise SearchTimeout()
+
+        if depth == 0:
+            return self.score(game, self)
+
+        legal_moves = game.get_legal_moves()
+        if not legal_moves:  # player can't move
+            return infinity
+
+        current_min = float("inf")
+
+        for move in legal_moves:
+            # get val of current move and update current_max
+            current_min = min(
+                current_min,
+                self.maxval(
+                    game.forecast_move(move),
+                    depth - 1,
+                    alpha=alpha,
+                    beta=beta
+                )
+            )
+
+            if current_min <= alpha:
+                # prune remaining moves: this branch will be eliminated anyway
+                return current_min
+
+            beta = max(beta, current_min)
+
+        return current_min
 
     def alphabeta(self, game, depth, alpha=float("-inf"), beta=float("inf")):
         """Implement depth-limited minimax search with alpha-beta pruning as
@@ -358,5 +465,19 @@ class AlphaBetaPlayer(IsolationPlayer):
         if self.time_left() < self.TIMER_THRESHOLD:
             raise SearchTimeout()
 
-        # TODO: finish this function!
-        raise NotImplementedError
+        if depth < 1:
+            raise ValueError("Depth must be at least 1")
+
+        legal_moves = game.get_legal_moves()
+
+        if not legal_moves:
+            return (-1, -1)
+
+        vals = []
+
+        for move in legal_moves:
+            vals.append(
+                self.minval(game.forecast_move(move), depth - 1, alpha, beta)
+            )
+
+        return legal_moves[vals.index(max(vals))]
