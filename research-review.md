@@ -10,3 +10,8 @@ Instead, they propose the use of deep convolutional neural networks, a method co
  * $p_\sigma$: policy network trained from human expert moves (supervised)
  * $p_\rho$: policy network trained through self play via Reinforcement Learning, based on $p_\sigma$
  * $v_\theta$: value network that predicts winner of positions (labels: winners by self play)
+
+
+
+# Link
+https://storage.googleapis.com/deepmind-media/alphago/AlphaGoNaturePaper.pdf
