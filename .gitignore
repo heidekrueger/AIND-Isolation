@@ -1,5 +1,9 @@
 isolation-*.zip
 isolation-*.json
+*.aux
+*.bbl
+*.synctex.gz
+*.blg
 
 # Created by https://www.gitignore.io/api/python
 

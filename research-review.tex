@@ -1,0 +1,84 @@
+\documentclass{article}
+\title{AIND Research Review: Alpha Go}
+\author{Stefan Heidekrüger}
+
+\usepackage[utf8x]{inputenc}
+%\usepackage
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{amstext}
+%\usepackage{graphicx}
+%\usepackage{xfrac}
+%\usepackage[left=1in, right=1in, top=1in, bottom=1in]{geometry}
+%\usepackage{hyperref}
+%\usepackage[ruled,vlined,linesnumbered]{algorithm2e}
+%\usepackage{dsfont}
+%\usepackage{courier}
+%\usepackage{color}
+\usepackage{amsthm}
+%\usepackage[super]{nth}
+\renewcommand{\qed}{\unskip\nobreak\quad\qedsymbol} %fixes position of \qed
+\usepackage{natbib}
+\bibliographystyle{abbrvnat}
+\setcitestyle{authoryear,open={(},close={)}}
+\usepackage{rotating}
+\usepackage{enumitem}
+\usepackage{slashbox}
+\usepackage[]{nomencl}
+\usepackage{comment}
+\usepackage[gen]{eurosym}
+\usepackage{caption}
+\usepackage{chngcntr}
+
+\usepackage{xargs}                      % Use more than one optional parameter in a new commands
+\usepackage[pdftex,dvipsnames]{xcolor}  % Coloured text etc.
+
+\usepackage[colorinlistoftodos,prependcaption,textsize=tiny]{todonotes}
+
+\newcommandx{\notsure}[2][1=]{\todo[linecolor=red,backgroundcolor=red!25,bordercolor=red,#1]{#2}}
+%\newcommandx{\change}[2][1=]{\todo[linecolor=blue,backgroundcolor=blue!25,bordercolor=blue,#1]{#2}}
+\newcommandx{\info}[2][1=]{\todo[linecolor=OliveGreen,backgroundcolor=OliveGreen!25,bordercolor=OliveGreen,#1]{#2}}
+\newcommandx{\improvement}[2][1=]{\todo[linecolor=Plum,backgroundcolor=Plum!25,bordercolor=Plum,#1]{#2}}
+%\newcommandx{\thiswillnotshow}[2][1=]{\todo[disable,#1]{#2}}
+
+\usepackage{titlesec}
+\setcounter{secnumdepth}{3}
+
+\titleformat{\paragraph}
+{\normalfont\normalsize\bfseries}{\theparagraph}{1em}{}
+\titlespacing*{\paragraph}
+{0pt}{3.25ex plus 1ex minus .2ex}{1.5ex plus .2ex}
+
+\newcommand\inv[1]{#1^{-1}}
+\newcommand\expect[2][]{\mathbb E_{#1}\left[#2 \right]}
+\newcommand\card{\texttt{\#}}
+
+%Define Theorem Environments
+\theoremstyle{plain}
+\newtheorem{thm}{Theorem}%[chapter]
+\newtheorem{propos}[thm]{Proposition}
+\newtheorem{lemma}[thm]{Lemma}
+\newtheorem{cor}[thm]{Corollary}
+\newtheorem{prop}[thm]{Proposition}
+\theoremstyle{definition}
+\newtheorem{defn}{Definition}[]
+\newtheorem{ass}{Assumption}[]
+\theoremstyle{remark}
+\newtheorem*{exmpl}{Example}
+\newtheorem*{remark}{Remark}
+\newtheorem*{remarks}{Remarks}
+
+
+\begin{document}
+\maketitle
+
+In \cite{silver2016mastering}, the authors describe the functionality, methodology and achievments of Google DeepMind's \emph{Alpha Go} Go-game playing agent (as of 2015)
+
+
+\nocite{*}
+%\bibliographystyle{apalike}%amsalpha
+\addcontentsline{toc}{chapter}{References} 
+\bibliography{references}
+
+\end{document}
