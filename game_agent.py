@@ -38,10 +38,16 @@ def custom_score(game, player):
         The heuristic value of the current game state to the specified player.
     """
 
+    if game.is_winner(player):
+        return float("inf")
+
+    if game.is_loser(player):
+        return float("-inf")
+
     player_moves = float(len(game.get_legal_moves(player)))
     opp_moves = float(len(game.get_legal_moves(game.get_opponent(player))))
 
-    return player_moves * player_moves - opp_moves**1.5
+    return 2*player_moves * player_moves - opp_moves**1.5
 
 
 def custom_score_2(game, player):
@@ -66,11 +72,18 @@ def custom_score_2(game, player):
     float
         The heuristic value of the current game state to the specified player.
     """
+
+    if game.is_winner(player):
+        return float("inf")
+
+    if game.is_loser(player):
+        return float("-inf")
+
     # For now: negative number of opposing moves
     player_moves = float(len(game.get_legal_moves(player)))
     opp_moves = float(len(game.get_legal_moves(game.get_opponent(player))))
 
-    return player_moves * player_moves - opp_moves * opp_moves
+    return player_moves**1.5 - 2 * opp_moves
 
 def custom_score_3(game, player):
     """Calculate the heuristic value of a game state from the point of view
@@ -95,10 +108,22 @@ def custom_score_3(game, player):
         The heuristic value of the current game state to the specified player.
     """
     # TODO: finish this function!  
-    player_moves = len(game.get_legal_moves(player))
-    opp_moves =len(game.get_legal_moves(game.get_opponent(player)))
 
-    return 2.0 * player_moves - 1.0 * opp_moves
+    if game.is_winner(player):
+        return float("inf")
+
+    if game.is_loser(player):
+        return float("-inf")
+
+    player_moves = game.get_legal_moves(player)
+    opp_moves =game.get_legal_moves(game.get_opponent(player))
+    blockable_moves = set(player_moves) & set(opp_moves)
+
+    if len(player_moves) == 1 and len(blockable_moves) == 1:
+        # opponent can block only move --> bad, but not -infty
+        return -100
+
+    return 2.0 * len(player_moves) - 1.0 * len(opp_moves)
 
 
 class IsolationPlayer:
