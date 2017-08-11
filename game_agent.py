@@ -537,7 +537,7 @@ class AlphaBetaPlayer(IsolationPlayer):
             current_val = self.minval(game.forecast_move(move), depth - 1, alpha, beta)
             alpha = max(alpha, current_val)
 
-            if current_val >= best_val: # new best move found:
+            if current_val > best_val: # new best move found:
                 best_val = current_val
                 best_move = move
 

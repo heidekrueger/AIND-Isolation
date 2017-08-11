@@ -12,7 +12,7 @@
 \usepackage{amstext}
 %\usepackage{graphicx}
 %\usepackage{xfrac}
-\usepackage[left=1in, right=1in, top=0.1in, bottom=1in]{geometry}
+\usepackage[left=1in, right=1in, top=1in, bottom=1in]{geometry}
 %\usepackage{hyperref}
 %\usepackage[ruled,vlined,linesnumbered]{algorithm2e}
 %\usepackage{dsfont}
@@ -32,6 +32,7 @@
 \usepackage[gen]{eurosym}
 \usepackage{caption}
 \usepackage{chngcntr}
+\usepackage{listingsutf8}
 
 \usepackage{xargs}                      % Use more than one optional parameter in a new commands
 \usepackage[pdftex,dvipsnames]{xcolor}  % Coloured text etc.
@@ -80,33 +81,84 @@ This document contains some analysis on the position evaluation heuristics that 
 \paragraph{Methodololgy}
 The goal of an evaluation heuristic $v$ is to approximate the \emph{value} $v^*$ of the game (from the point of view of the agent player.) As such, it's always the goal to win the game and avoid losing it, so it makes sense to set $v(\textnormal{winning position}) = \infty$ and $v(\textnormal{losing position})=-\infty$. (These values are well-defined, as our alpha-beta-tuning algorithm solely relies on \emph{ordinal} comparisons of values; if we instead employed Monte-Carlo tree search or other similar algorithms, we would need to use finite values in order to \emph{weigh} moves somehow \textemdash and also worry about interval scaling.)
 
-More importantly, let's consider position that are neither clearly winning or losing. We decided that the heuristic should be primarily decided based on the \emph{number of possible moves for the playing agent} $n$ and the \emph{number of possible moves for the opposing player} $m$. Other measures, such as centrality, were briefly considered but were quickly discarded when they didn't show much promise in the first experiments.
+More importantly, let's consider positions that are neither clearly winning or losing. We decided that the heuristic should be primarily decided based on the \emph{number of possible moves for the playing agent} $n$ and the \emph{number of possible moves for the opposing player} $m$. Other measures, such as centrality, were briefly considered but were quickly discarded when they didn't show much promise in the first experiments.
 
 As it's obvious that $m$ should affect the heuristic negatively (and $n$ positively), we considered polynomial functions of the form
 $$v(n,m) = an^b - cm^d $$
 with $0 \leq a,c \lessapprox 10$, $0 < b,d \lessapprox 3$ (a value of $0$ for $b$ or $d$ would be irrelevant due to translation invariance).
 
-Due to time-constraints, we did not perform an exhaustive parameter-search in this space, but rather manually tried different combinations for a very superficial search by hand. In each case, decisions were made on a handful of cases of round-robin tournaments as provided in \texttt{tournameny.py} as no resources for more robust methods were available. It should be noted that the results contained "a lot" of variance and any analysis result should therefore be taken with a grain of salt and only be seen as a rough draft rather than thoroughly tested insights on valuable heuristics. The given implementation \texttt{AB-Improved} served as the main baseline for comparison
+\lstset{
+basicstyle=\scriptsize\tt,
+}
 
+\lstinputlisting[float=h,frame=tb,caption={Sample output of \texttt{tournament.py} for one tournament (T3 in tables \ref{table1} , \ref{table2}) for heuristics introduced below.},label=zebra]{sample_output.txt}\label{listing}
+
+Due to time-constraints, we did not perform an exhaustive parameter-search in this space, but rather manually tried different combinations for a very superficial search by hand. In each case, decisions were made on a handful of cases of round-robin tournaments as provided in \texttt{tournameny.py} as no resources for more robust methods were available. A sample output of such a tournament is given in \ref{listing}. It should be noted that the results contained "a lot" of variance across the tournaments and any analysis result should therefore be taken with a grain of salt and only be seen as a rough draft rather than thoroughly tested insights on valuable heuristics. The given implementation \texttt{AB-Improved} served as the main performance benchmark and has thus been included as a possible heuristic for direct comparison.
+
+
+
+\paragraph{Narrowing down the parameter space}
+
+
+From the first few experiments (results omitted), it quickly became clear that the following should hold:
+\begin{itemize}
+	\item $a>0, c>0$
+	\item $n$ should be weighed stronger than $m$, roughly speaking $cm^d = \mathcal O(an^b)$
+	\item Ideally, each of the parameters should be reasonably small - otherwise one of the terms would dominate and render the other obsolete. This however was found not to be desirable.
+\end{itemize}
+
+
+After some experimentation, we finally considered the following 3 candidate heuristics for a somewhat more formal comparison across 5 tournaments, which each adher to the properties above:
+\begin{itemize}
+	\item $v_0$ \qquad baseline \texttt{AB-Improved} 
+	\item $v_1 = 2n^2 - m\sqrt m$ \qquad \texttt{AB-Custom} 
+	\item $v_2 = n\sqrt n - 2m$  \qquad \texttt{AB-Custom2}
+	\item $v_3 = 2n - m$ (with additional check: If player's only possible move can be blocked in opponent's next move, then $v_3=-100$) \qquad \texttt{AB-Custom3}
+\end{itemize}
+
+As the main critera for comparison of these candidate heuristics, we consider repeated round-robin-performance as well as each agent's one-on-one track record against the oponent's instance of \texttt{AB-Improved} \textendash both across a series of 5 consecutive tournaments. Detailed results of the round-robin-scores and direct performance against the baseline are given in tables \ref{table1} and \ref{table2}, respectively.
+
+
+\begin{table}[h]
+\centering
+\caption{Round-Robin performance of selected heuristics over a series of 5 tournaments.}
+\label{table1}
+\begin{tabular}{l|lllll|l}
+Agent          			     & T1   & T2   & T3   & T4   & T5   &  avg \\ \hline
+$v_0$ (\texttt{AB-Improved}) & 52.9 & 60.0 & 54.3 & 60.0 & 54.3 &  56.30  \\
+$v_1 $        			     & 51.4 & 57.1 & 65.7 & 64.3 & 71.4 &  61.98    \\
+$v_2$          			     & 65.7 & 64.3 & 70.0 & 71.4 & 55.7 &  \textbf{65.42}    \\
+$v_3$           		     & 70.0 & 51.4 & 68.6 & 65.7 & 57.1 &  62.56   
+\end{tabular}
+\end{table}
+
+
+\begin{table}[h]
+\centering
+\caption{Direct comparison of agents (lhs) to opponent instance of \texttt{AB-Improved} (rhs).}
+\label{table2}
+\begin{tabular}{l|lllll|ll}
+Agent          			     & T1   & T2   & T3   & T4   & T5   &  total  & win rate\\ \hline
+$v_0$ (\texttt{AB-Improved}) & 5 : 5 & 4 : 6 & 6 : 4 & 5 : 5 & 6 : 4 &  26 : 24 & 52\%\\
+$v_1 $        			     & 4 : 6 & 4 : 6 & 7 : 3 & 6 : 4 & 6 : 4 &  27 : 23 & 54\%   \\
+$v_2$          			     & 5 : 5 & 5 : 5 & 6 : 4 & 8 : 2 & 6 : 4 &  30 : 20 & \textbf{60\%}  \\
+$v_3$           		     & 6 : 4 & 2 : 8 & 5 : 5 & 5 : 5 & 5 : 5 &  28 : 22 & 56\% 
+\end{tabular}
+\end{table}
 
 \paragraph{Results and Final Heuristics}
 
-From the first few experiments, it quickly became clear that the following should hold:
+In the experiment all of our custom heuristics outperformed \texttt{AB-Improved}, both in terms of RR-tournament scores and in direct comparison.
+Moreover, we chose $v_2$ as our final heuristic, as it outperformed all other heuristics in several ways:
+
 \begin{itemize}
-	\item $a>0, c>0$
-	\item $n$ should be weighed stronger than $m$, roughly speaking $cm^d = \mathcal O(an^d)$
+	\item $v_2$ achieved the highest average RR-score in the experiment.
+	\item $v_2$ also achieved the highest direct comparison score against the baseline.
+	\item Finally, $v_2$'s Round-Robin scores dominated the baseline's RR-scores in each individual tournament, a feat that wasn't achieved by any of the other candidate heuristics.
 \end{itemize}
 
-After some experimentation, we finally considered the following heuristics (along with their win-rates over 5 consecutive tournaments):
-\begin{itemize}
-	\item $v_0$: baseline \texttt{AB-Improved} \quad(61.4, 57.1, 61.4, 67.1, 61.4, avg: 61.7) 
-	\item $v_1 = 2n^2 - m\sqrt m$ \qquad (68.6, 57.1, 67.1, 67.1, 64.3, avg: 64.84)
-	\item $v_2 = n\sqrt n - 2m$ \quad (60.0, 54.3, 65.7, 72.9, 54.3, avg: 61.44)
-	\item $v_3 = 2n - m$\footnote{With additional check: If only possible move can be blocked in opponents next move, then $v_3=-100$} (64.3, 65.7, 55.7, 57.1, 60.0,  avg: 60.56)
-\end{itemize}
-
-We can see that from this list, $v_1$ not only achieves the highest average score \textemdash it also (weakly) dominates the baseline player across these tournaments. As such, we chose
-$$ v_1 = 2n^2 - m^{1.5}$$ as our final heuristic.
+In conclusion, this lead to us chosing the following final heuristic function:
+$$ v_2 = n^{1.5} - 2m$$
 
 % \nocite{*}
 % %\bibliographystyle{apalike}%amsalpha
